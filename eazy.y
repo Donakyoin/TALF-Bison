@@ -1,4 +1,4 @@
-
+ 
 %{
 
   #include <stdio.h>
@@ -57,7 +57,7 @@ librerias
 //  libreria ::= 'importar' (nombre)+ '.' | 'importar' nombre 'como' IDENTIFICADOR '.'
 libreria
     : IMPORTAR lista_nombres '.' { printf("\tlibreria -> IMPORTAR lista_nombres .\n"); }
-    | IMPORTAR nombre COMO IDENTIFICADOR '.' { printf("\tlibreria -> IMPORTAR nombre COMO IDENTIFICADOR .\n"); }
+    | IMPORTAR nombre COMO IDENTIFICADOR '.' { printf("\tliberia -> IMPORTAR nombre COMO IDENTIFICADOR .\n"); }
     ;
 
 lista_nombres
@@ -172,7 +172,7 @@ elemento_enum
 
 //  linea_campo ::= ( IDENTIFICADOR )+ ’es’ especificacion_tipo
 linea_campo
-    : identificadores ES especificacion_tipo  { printf("\tlinea_campo -> identificadores ES especificacion_tipo\n"); }
+    : identificadores ES especificacion_tipo  { printf("\topcion_dec_tipos -> identificadores ES especificacion_tipo\n"); }
     ;
 
 //  componentes ::= [ declaraciones_tipos ]? [ declaraciones_constantes ]? [ declaraciones_variables ]? [ declaracion_metodo ]+
@@ -252,24 +252,24 @@ constante
 
 //  constante_tabla ::= ’(’ ( constante )* ’)’ | ’(’ ( elemento_hash )* ’)’
 constante_tabla
-    : '(' constantes_tabla ')'  { printf("\tconstante_tabla -> (lista_constantes)\n"); }
-    | '(' elem_hash_tabla ')'  { printf("\tconstante_tabla -> (elementos_hash)\n"); }
+    : '(' opcion_lista_constantes ')'  { printf("\tconstante_tabla -> (lista_constantes)\n"); }
+    | '(' opcion_elementos_hash ')'  { printf("\tconstante_tabla -> (elementos_hash)\n"); }
     ;
 
-constantes_tabla
-    : lista_constantes { printf("\tconstantes_tabla -> lista_constantes\n"); }
-    | { printf("\tconstantes_tabla -> \n"); }
+
+opcion_lista_constantes
+    : lista_constantes  { printf("\topcion_lista_constantes -> lista_constantes\n"); }
+    |   { printf("\topcion_lista_constantes -> \n"); }
     ;
 
 lista_constantes
     : lista_constantes ';' constante  { printf("\tlista_constantes -> lista_constantes ; constante\n"); }
-    | constante { printf("\tlista_constantes -> constante\n"); }
-    | { printf("\tlista_constantes -> \n"); }
+    | constante { printf("\tlista_constantes -> constante\n"); } 
     ;
 
-elem_hash_tabla
-    : elementos_hash { printf("\telem_hash_tabla -> elementos_hash\n"); }
-    | { printf("\telem_hash_tabla -> \n"); }
+opcion_elementos_hash
+    : elementos_hash    { printf("\topcion_elementos_hash -> elementos_hash\n"); }
+    |   { printf("\topcion_elementos_hash -> \n"); } 
     ;
 
 elementos_hash
@@ -593,7 +593,7 @@ expresion_basica
     | '(' expresion ')' { printf("\texpresion_basica -> (expresion)\n"); }
     | '^' expresion_basica  { printf("\texpresion_basica -> ^expresion_basica\n"); }
     | REF expresion_basica  { printf("\texpresion_basica -> REF expresion_basica\n"); }
-    | expresion_constante { printf("\texpresion_basica -> expresion_constante\n"); }
+    | expresion_constante   { printf("\texpresion_basica -> expresion_constante\n"); }   
     ;
 
 //  indice ::= ’[’ expresion ’]’ | ’{’ expresion ’}’
@@ -604,13 +604,17 @@ indice
 
 //  expresion_funcional ::= IDENTIFICADOR ’(’ ( expresion )* ’)’
 expresion_funcional
-    : IDENTIFICADOR '(' expresiones_expfun ')' { printf("\texpresion_funcional -> IDENTIFICADOR (expresiones_expfun)\n"); }
+    : IDENTIFICADOR '(' opcion_expresiones_expfun ')' { printf("\texpresion_funcional -> IDENTIFICADOR (expresiones_expfun)\n"); }
+    ;
+
+opcion_expresiones_expfun
+    : expresiones_expfun    { printf("\topciones_expresiones_expfun -> expresiones_expfun\n"); }
+    | { printf("\topciones_expresiones_expfun -> \n"); }
     ;
 
 expresiones_expfun
     : expresiones_expfun ';' expresion { printf("\texpresiones_expfun -> expresiones_expfun ; expresion\n"); }
     | expresion { printf("\texpresiones_expfun -> expresion\n"); }
-    | { printf("\texpresiones_expfun -> \n"); }
     ;
 
 //  expresion ::= expresion_logica [ ’si’ expresion ’sino’ expresion ]? | expresion_logica ’para’ ’cada’ IDENTIFICADOR ’en’ expresion
@@ -699,7 +703,7 @@ expr_unaria
     | expr_primaria { printf("\texpr_unaria -> expr_primaria\n"); }
     ;
 
-expr_primaria
+expr_primaria 
     : expresion_indexada  { printf("\texpr_primaria -> expresion_indexada\n"); }
     | expresion_funcional { printf("\texpr_primaria -> expresion_funcional\n"); }
     ;

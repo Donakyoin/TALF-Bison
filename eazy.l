@@ -2,7 +2,6 @@
 
 #include <stdio.h>
 #include "eazy.tab.h"
-#include <string.h>
 
 %}
 
@@ -22,9 +21,9 @@ REAL_DECIMAL        {DECIMAL}?","{DECIMAL}
 REAL_OCTAL          "%"[0-7]*","[0-7]+ 
 REAL_HEXADECIMAL    "%"[hH]{HEX}*","{HEX}+ 
 
-REAL_EXP_DECIMAL ({DECIMAL}|{REAL_DECIMAL})({EXP})
-REAL_EXP_OCTAL ({OCTAL}|{REAL_OCTAL})({EXP})
-REAL_EXP_HEXADECIMAL ({HEXADECIMAL}|{REAL_HEXADECIMAL})({EXP})
+REAL_EXP_DECIMAL        ({DECIMAL}|{REAL_DECIMAL}){EXP}
+REAL_EXP_OCTAL          ({OCTAL}|{REAL_OCTAL}){EXP}
+REAL_EXP_HEXADECIMAL    ({HEXADECIMAL}|{REAL_HEXADECIMAL}){EXP}
 
 
 ESCAPE_COMUN        %[fnrt\\]
