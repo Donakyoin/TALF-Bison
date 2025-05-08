@@ -241,26 +241,16 @@ constante
 
 //  constante_tabla ::= ’(’ ( constante )* ’)’ | ’(’ ( elemento_hash )* ’)’
 constante_tabla
-    : '(' opcion_lista_constantes ')'  { printf("\tconstante_tabla -> (lista_constantes)\n"); }
-    | '(' opcion_elementos_hash ')'  { printf("\tconstante_tabla -> (elementos_hash)\n"); }
-    ;
-
-
-opcion_lista_constantes
-    : lista_constantes  { printf("\topcion_lista_constantes -> lista_constantes\n"); }
-    |   { printf("\topcion_lista_constantes -> \n"); }
+    : '(' lista_constantes ')'  { printf("\tconstante_tabla -> (lista_constantes)\n"); }
+    | '(' elementos_hash ')'  { printf("\tconstante_tabla -> (elementos_hash)\n"); }
+    | '('   ')' { printf("\tconstante_tabla -> ( )\n"); }
     ;
 
 lista_constantes
     : lista_constantes ';' constante  { printf("\tlista_constantes -> lista_constantes ; constante\n"); }
     | constante { printf("\tlista_constantes -> constante\n"); } 
     ;
-
-opcion_elementos_hash
-    : elementos_hash    { printf("\topcion_elementos_hash -> elementos_hash\n"); }
-    |   { printf("\topcion_elementos_hash -> \n"); } 
-    ;
-
+    
 elementos_hash
     : elementos_hash ';' elemento_hash  { printf("\telementos_hash -> elementos_hash ; elemento_hash\n"); }
     | elemento_hash { printf("\telementos_hash -> elemento_hash\n"); }
