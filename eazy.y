@@ -192,7 +192,6 @@ metodos
 //  declaracion_metodo ::= [ visibilidad ]? [ modificador ]? firma_funcion cuerpo_funcion
 declaracion_metodo
     : opcion_visibilidad opcion_modificador firma_funcion cuerpo_funcion  { printf("\tdeclaracion_metodo -> opcion_visibilidad opcion_modificador firma_funcion cuerpo_funcion\n"); }
-    | error '.' { printf("\tError en la declaración de métodos\n"); }
     ;
 
 opcion_modificador
@@ -330,13 +329,11 @@ expresiones
 declaracion_funcion
     : firma_funcion cuerpo_funcion { printf("\tdeclaracion_funcion -> firma_funcion cuerpo_funcion\n"); }
     | visibilidad firma_funcion cuerpo_funcion { printf("\tdeclaracion_funcion -> visibilidad firma_funcion cuerpo_funcion\n"); }
-    | error '.' { printf("\tError en la declaración de funciones\n"); yyerrok; }
     ;
 
 //  firma_funcion ::= ’funcion’ IDENTIFICADOR [ ’(’ ( parametros ):+ ’)’ ]? ’->’ tipo_salida
 firma_funcion
     : FUNCION IDENTIFICADOR opcion_parametros_funcion FLECHA_DCHA tipo_salida { printf("\tfirma_funcion -> FUNCION IDENTIFICADOR opcion_parametros_funcion '->' tipo_salida\n"); }
-    | error FLECHA_DCHA { printf("\tError en firma_funcion\n"); yyerrok; }
     ;
 
 opcion_parametros_funcion
@@ -352,7 +349,6 @@ lista_parametros
 //  parametros ::= ( IDENTIFICADOR )+ ’es’ especificacion_tipo [ ’:=’ ( expresion_constante )+ ]?
 parametros
     : identificadores ES especificacion_tipo opcion_asignacion  { printf("\tparametros -> identificadores ES especificacion_tipo opcion_asignacion\n"); }
-    | error ')' { printf("\tError en parámetros\n"); yyerrok; }
     ;
 
 identificadores
@@ -399,7 +395,6 @@ funciones
 //  bloque_instrucciones ::= ’principio’ [ instruccion ]+ ’fin’
 bloque_instrucciones
     : PRINCIPIO instrucciones FIN { printf("\tbloque_instrucciones -> PRINCIPIO instrucciones FIN\n"); }
-    | error FIN { printf("\tError en bloque de instrucciones\n"); }
     ;
 
 instrucciones
