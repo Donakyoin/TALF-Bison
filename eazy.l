@@ -2,39 +2,40 @@
 
 #include <stdio.h>
 #include "eazy.tab.h"
+#include <string.h>
 
 %}
 
-LETRA [a-zA-Z_]
-LETRA_CARACTERES [a-zA-Z0-9_]
-IDENTIFICADOR    ({LETRA}|{LETRA_CARACTERES})*
+LETRA [a-zA-Z]
 
 DIGITO              [0-9]
-HEX                 [a-fA-F0-9]
+HEX                 [0-9a-fA-F]
+OCTAL               [0-7]
+
 EXP                 "exp"[+-]?({DECIMAL}|{OCTAL}|{HEXADECIMAL})+
 
-HEXADECIMAL         "%"[hH]{HEX}+ 
-OCTAL               "%"[0-7]+
 DECIMAL             {DIGITO}+
+HEXADECIMAL         %[hH]{HEX}+ 
+OCTAL_DECIMAL       %{OCTAL}+
+
 
 REAL_DECIMAL        {DECIMAL}?","{DECIMAL}
-REAL_OCTAL          "%"[0-7]*","[0-7]+ 
-REAL_HEXADECIMAL    "%"[hH]{HEX}*","{HEX}+ 
+REAL_OCTAL          %{OCTAL}*","{OCTAL}+ 
+REAL_HEXADECIMAL    %[hH]{HEX}*","{HEX}+
 
 REAL_EXP_DECIMAL        ({DECIMAL}|{REAL_DECIMAL}){EXP}
 REAL_EXP_OCTAL          ({OCTAL}|{REAL_OCTAL}){EXP}
 REAL_EXP_HEXADECIMAL    ({HEXADECIMAL}|{REAL_HEXADECIMAL}){EXP}
 
 
-ESCAPE_COMUN        %[fnrt\\]
+ESCAPE_COMUN        %[fnrt]
 ESCAPE_OCTAL        %([0-7]{1,3})
 ESCAPE_HEXA         %[hH]{HEX}+
-ESCAPE_LINEA        %\n
 
-ESCAPE              (%\"|%%|{ESCAPE_COMUN}|{ESCAPE_OCTAL}|{ESCAPE_HEXA}|{ESCAPE_LINEA})
+ESCAPE              ({ESCAPE_COMUN}|{ESCAPE_OCTAL}|{ESCAPE_HEXA})
 
-CARACTER            ({ESCAPE}|[^%\"\n])
-CADENA              \"({CARACTER}|{ESCAPE})*\"
+CARACTER            (%\"|%%|{ESCAPE}|[^%\"\n])
+CADENA              \"({CARACTER}|{ESCAPE}|%%|%\")*\"
 
 DELIMITADOR         "{"|"}"|"("|")"|":"|";"|"."
 
@@ -49,14 +50,30 @@ OPERADOR_SIMPLE    ({OP_ARITMETICOS}|{OP_BITS}|{OP_RELACIONAL}|{OP_LOGICO}|{OP_M
 
 ESPACIO             [ \t\r]
 
-
+%x CADENA_MULTILINEA
 %x COMENTARIO
+
 %option yylineno
 
 %%
 
 \n {  }
 {ESPACIO}+ { }
+
+\"({CARACTER}|{ESCAPE})*%\n {
+    printf("Línea %d: Constante cadena multilínea %s", yylineno, yytext);
+    BEGIN(CADENA_MULTILINEA);
+}
+
+<CADENA_MULTILINEA>({CARACTER}|{ESCAPE})*%\n {
+    printf("%s", yytext);
+}
+
+<CADENA_MULTILINEA>({CARACTER}|{ESCAPE})*\" {
+    printf("%s\n", yytext);
+    BEGIN(INITIAL);
+    return CTC_CADENA;
+}
 
 {OPERADOR_SIMPLE} { printf("Línea %d: Operador %s\n", yylineno, yytext); return yytext[0]; }
 
@@ -150,15 +167,14 @@ ESPACIO             [ \t\r]
 {REAL_OCTAL}            { printf("Línea %d: Constante real octal %s\n", yylineno, yytext); return CTC_REAL; }
 {REAL_HEXADECIMAL}      { printf("Línea %d: Constante real hexadecimal %s\n", yylineno, yytext); return CTC_REAL; }
 
-{HEXADECIMAL}   { printf("Línea %d: Constante entera hexadecimal %s\n", yylineno, yytext); return CTC_ENTERA; }
-{OCTAL}         { printf("Línea %d: Constante entera octal %s\n", yylineno, yytext); return CTC_ENTERA; }
 {DECIMAL}       { printf("Línea %d: Constante entera decimal %s\n", yylineno, yytext); return CTC_ENTERA; }
+{HEXADECIMAL}   { printf("Línea %d: Constante entera hexadecimal %s\n", yylineno, yytext); return CTC_ENTERA; }
+{OCTAL_DECIMAL}         { printf("Línea %d: Constante entera octal %s\n", yylineno, yytext); return CTC_ENTERA; }
 
-{CADENA}        { printf("Línea %d: Constante cadena %s\n", yylineno, yytext); return CTC_CADENA; }
+({LETRA}|_)({LETRA}|{DIGITO}|_)* { printf("Línea %d: Identificador %s\n", yylineno, yytext); return IDENTIFICADOR; }
 
 {CARACTER}      { printf("Línea %d: Constante carácter %s\n", yylineno, yytext); return CTC_CARACTER; }
-
-{IDENTIFICADOR} { printf("Línea %d: Identificador %s\n", yylineno, yytext); return IDENTIFICADOR; }
+{CADENA}        { printf("Línea %d: Constante cadena %s\n", yylineno, yytext); return CTC_CADENA; }
 
 "%%".*    ; 
 
@@ -168,7 +184,7 @@ ESPACIO             [ \t\r]
 <COMENTARIO>\n            ;  
 <COMENTARIO>.             ;  
 
-. { printf("Lí­nea %d: Error : carácter no reconocido '%s'\n", yylineno, yytext); }
+. { printf("Línea %d: Error : carácter no reconocido '%s'\n", yylineno, yytext); }
 
 
 %%

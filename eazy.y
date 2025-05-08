@@ -18,18 +18,6 @@
 %token MOD MOD_ASIG MULT_ASIG NADA NEQ OR OTRA OR_ASIG PARA POT_ASIG POTENCIA PRINCIPIO PRIVADO PROGRAMA PROTEGIDO
 %token PTOS PUBLICO REAL REF RESTA_ASIG SALTAR SI SINO SUMA_ASIG TAMANO TABLA TIPOS ULTIMA UNION VARIABLES XOR_ASIG
 
-%left OR
-%left AND
-%nonassoc EQ NEQ
-%nonassoc '<' '>' LE GE
-%left '|'
-%left '@'
-%left '&'
-%left FLECHA_IZDA FLECHA_DCHA
-%left '+' '-' MOD
-%left '*'
-%right POTENCIA
-%nonassoc MENOS_UNARIO COMPLEMENTO NEQ_LOGICA TAMANOB
 
 %start programa
 
@@ -94,6 +82,7 @@ tipos
 declaracion_tipo
     : opcion_visibilidad IDENTIFICADOR ES refs tipo_basico '.'  { printf("\tdeclaracion_tipo -> opcion_visibilidad IDENTIFICADOR ES refs tipo_basico .\n"); }
     | opcion_visibilidad IDENTIFICADOR ES refs tipo_estructurado  { printf("\tdeclaracion_tipo -> opcion_visibilidad IDENTIFICADOR ES refs tipo_estructurado\n"); }
+    | error '.' { printf("\tError en la declaracion de tipos\n"); yyerrok; }
     ;
 
 //  visibilidad ::= ’publico’ | ’privado’ | ’protegido’
@@ -203,6 +192,7 @@ metodos
 //  declaracion_metodo ::= [ visibilidad ]? [ modificador ]? firma_funcion cuerpo_funcion
 declaracion_metodo
     : opcion_visibilidad opcion_modificador firma_funcion cuerpo_funcion  { printf("\tdeclaracion_metodo -> opcion_visibilidad opcion_modificador firma_funcion cuerpo_funcion\n"); }
+    | error '.' { printf("\tError en la declaración de métodos\n"); }
     ;
 
 opcion_modificador
@@ -236,8 +226,8 @@ lista_declaraciones_constante
 
 //  declaracion_constante ::= [ visibilidad ]? IDENTIFICADOR ’es’ tipo_basico ’:=’ constante ’.’
 declaracion_constante
-    : IDENTIFICADOR ES tipo_basico ASIG constante '.' { printf("\tdeclaracion_constante -> IDENTIFICADOR ES tipo_basico := constante .\n"); }
-    | visibilidad IDENTIFICADOR ES tipo_basico ASIG constante '.' { printf("\tdeclaracion_constante -> visibilidad IDENTIFICADOR ES tipo_basico := constante .\n"); }
+    : opcion_visibilidad IDENTIFICADOR ES tipo_basico ASIG constante '.' { printf("\tdeclaracion_constante -> IDENTIFICADOR ES tipo_basico := constante .\n"); } 
+    | error '.' { printf("\tError en la declaración de constantes\n"); yyerrok; }
     ;
 
 //  constante ::= CTC_ENTERA | CTC_REAL | CTC_CARACTER | CTC_CADENA | constante_tabla | constante_estructurada
@@ -284,12 +274,12 @@ elemento_hash
 
 //  constante_estructurada ::= ’(’ ( campo_constante )+ ’)’
 constante_estructurada
-    : '(' lista_lista_lineas_campo_constante ')'  { printf("\tconstante_estructurada -> (lista_lista_lineas_campo_constante)\n"); }
+    : '(' lista_campos_constantes ')'  { printf("\tconstante_estructurada -> (lista_campos_constantes)\n"); }
     ;
 
-lista_lista_lineas_campo_constante
-    : lista_lista_lineas_campo_constante ';' campo_constante  { printf("\tlista_lista_lineas_campo_constante -> lista_lista_lineas_campo_constante ; campo_constante\n"); }
-    | campo_constante { printf("\tlista_lista_lineas_campo_constante -> campo_constante\n"); }
+lista_campos_constantes
+    : lista_campos_constantes ';' campo_constante  { printf("\tlista_campos_constantes -> lista_campos_constantes ; campo_constante\n"); }
+    | campo_constante { printf("\tlista_campos_constantes -> campo_constante\n"); }
     ;
 
 //  campo_constante ::= IDENTIFICADOR ’:=’ constante
@@ -314,6 +304,7 @@ lista_variables
 //  declaracion_variables ::= [ visibilidad ]? ( IDENTIFICADOR )+ ’es’ especificacion_tipo [ ’:=’ ( expresion )+ ]? ’.’ 
 declaracion_variables
     : opcion_visibilidad identificadores ES especificacion_tipo opcion_expresion_variables '.'  { printf("\tdeclaracion_variables -> opcion_visibilidad identificadores ES especificacion_tipo opcion_expresion_variables .\n"); }
+    | error '.' { printf("\tError en la declaración de variables\n"); yyerrok; }
     ;
 
 opcion_visibilidad
@@ -339,11 +330,13 @@ expresiones
 declaracion_funcion
     : firma_funcion cuerpo_funcion { printf("\tdeclaracion_funcion -> firma_funcion cuerpo_funcion\n"); }
     | visibilidad firma_funcion cuerpo_funcion { printf("\tdeclaracion_funcion -> visibilidad firma_funcion cuerpo_funcion\n"); }
+    | error '.' { printf("\tError en la declaración de funciones\n"); yyerrok; }
     ;
 
 //  firma_funcion ::= ’funcion’ IDENTIFICADOR [ ’(’ ( parametros ):+ ’)’ ]? ’->’ tipo_salida
 firma_funcion
     : FUNCION IDENTIFICADOR opcion_parametros_funcion FLECHA_DCHA tipo_salida { printf("\tfirma_funcion -> FUNCION IDENTIFICADOR opcion_parametros_funcion '->' tipo_salida\n"); }
+    | error FLECHA_DCHA { printf("\tError en firma_funcion\n"); yyerrok; }
     ;
 
 opcion_parametros_funcion
@@ -359,6 +352,7 @@ lista_parametros
 //  parametros ::= ( IDENTIFICADOR )+ ’es’ especificacion_tipo [ ’:=’ ( expresion_constante )+ ]?
 parametros
     : identificadores ES especificacion_tipo opcion_asignacion  { printf("\tparametros -> identificadores ES especificacion_tipo opcion_asignacion\n"); }
+    | error ')' { printf("\tError en parámetros\n"); yyerrok; }
     ;
 
 identificadores
@@ -405,6 +399,7 @@ funciones
 //  bloque_instrucciones ::= ’principio’ [ instruccion ]+ ’fin’
 bloque_instrucciones
     : PRINCIPIO instrucciones FIN { printf("\tbloque_instrucciones -> PRINCIPIO instrucciones FIN\n"); }
+    | error FIN { printf("\tError en bloque de instrucciones\n"); }
     ;
 
 instrucciones
@@ -427,6 +422,7 @@ instruccion
     | instruccion_lanzamiento_excepcion { printf("\tinstruccion -> instruccion_lanzamiento_excepcion\n"); }
     | instruccion_captura_excepcion { printf("\tinstruccion -> instruccion_captura_excepcion\n"); }
     | instruccion_vacia { printf("\tinstruccion -> instruccion_vacia\n"); }
+    | error '.' { printf("\tError en las instrucciones\n"); yyerrok; }
     ;
 
 //  instruccion_expresion ::= expresion_funcional ’.’ | asignacion ’.’
@@ -566,6 +562,13 @@ instruccion_vacia
 /* expresiones */
 /***************/
 
+//  expresion ::= expresion_logica [ ’si’ expresion ’sino’ expresion ]? | expresion_logica ’para’ ’cada’ IDENTIFICADOR ’en’ expresion
+expresion
+    : expresion_logica opcion_condicion_expresion { printf("\texpresion -> expresion_logica opcion_condicion_expresion\n"); }
+    | expresion_logica PARA CADA IDENTIFICADOR EN expresion { printf("\texpresion -> expresion_logica PARA CADA IDENTIFICADOR EN expresion\n"); }
+    | error '.' { printf("\tError en las expresiones\n"); yyerrok; }
+    ;
+
 //  expresion_constante ::= CTC_ENTERA | CTC_REAL | CTC_CADENA | CTC_CARACTER
 expresion_constante
     : CTC_ENTERA  { printf("\texpresion_constante -> CTC_ENTERA\n"); }
@@ -617,12 +620,6 @@ expresiones_expfun
     | expresion { printf("\texpresiones_expfun -> expresion\n"); }
     ;
 
-//  expresion ::= expresion_logica [ ’si’ expresion ’sino’ expresion ]? | expresion_logica ’para’ ’cada’ IDENTIFICADOR ’en’ expresion
-expresion
-    : expresion_logica opcion_condicion_expresion { printf("\texpresion -> expresion_logica opcion_condicion_expresion\n"); }
-    | expresion_logica PARA CADA IDENTIFICADOR EN expresion { printf("\texpresion -> expresion_logica PARA CADA IDENTIFICADOR EN expresion\n"); }
-    ;
-
 opcion_condicion_expresion
     : SI expresion SINO expresion { printf("\topcion_condicion_expresion -> SI expresion NO expresion\n"); }
     | { printf("\topcion_condicion_expresion -> \n"); }
@@ -633,74 +630,74 @@ expresion_logica
     ;
 
 or_logico
-    : or_logico OR or_logico  { printf("\tor_logico -> or_logico || or_logico\n"); }
-    | and_logico  { printf("\tor_logico -> and_logico\n"); }
+    : and_logico  { printf("\tor_logico -> and_logico\n"); }
+    | or_logico OR and_logico  { printf("\tor_logico -> or_logico || and_logico \n"); }
     ;
 
 and_logico
-    : and_logico AND and_logico { printf("\tand_logico -> and_logico && and_logico\n"); }
-    | expr_igualdad { printf("\tand_logico -> expr_igualdad\n"); }
+    : expr_igualdad { printf("\tand_logico -> expr_igualdad\n"); }
+    | and_logico AND expr_igualdad { printf("\tand_logico -> and_logico && expr_igualdad\n"); }
     ;
 
 expr_igualdad
-    : expr_igualdad EQ expr_igualdad { printf("\texpr_igualdad -> expr_igualdad == expr_igualdad\n"); }
-    | expr_igualdad NEQ expr_igualdad { printf("\texpr_igualdad -> expr_igualdad != expr_igualdad\n"); }
-    | expr_relacional { printf("\texpr_igualdad -> expr_relacional\n"); }
+    : expr_relacional { printf("\texpr_igualdad -> expr_relacional\n"); }
+    | expr_igualdad EQ expr_relacional { printf("\texpr_igualdad -> expr_igualdad == expr_relacional\n"); }
+    | expr_igualdad NEQ expr_relacional { printf("\texpr_igualdad -> expr_igualdad != expr_relacional\n"); }
     ;
 
 expr_relacional
-    : expr_relacional '<' expr_relacional { printf("\texpr_relacional -> expr_relacional < expr_relacional\n"); }
-    | expr_relacional '>' expr_relacional { printf("\texpr_relacional -> expr_relacional > expr_relacional\n"); }
-    | expr_relacional LE expr_relacional  { printf("\texpr_relacional -> expr_relacional <= expr_relacional\n"); }
-    | expr_relacional GE expr_relacional  { printf("\texpr_relacional -> expr_relacional >= expr_relacional\n"); }
-    | or_binario  { printf("\texpr_relacional -> or_binario\n"); }
+    : or_binario  { printf("\texpr_relacional -> or_binario\n"); }
+    | expr_relacional '<' or_binario { printf("\texpr_relacional -> expr_relacional < or_binario\n"); }
+    | expr_relacional '>' or_binario { printf("\texpr_relacional -> expr_relacional > or_binario\n"); }
+    | expr_relacional LE or_binario  { printf("\texpr_relacional -> expr_relacional <= or_binario\n"); }
+    | expr_relacional GE or_binario  { printf("\texpr_relacional -> expr_relacional >= or_binario\n"); }
     ;
 
 or_binario
-    : or_binario '|' or_binario { printf("\tor_binario -> or_binario | or_binario\n"); }
-    | xor_binario { printf("\tor_binario -> xor_binario\n"); }
+    : xor_binario { printf("\tor_binario -> xor_binario\n"); }
+    | or_binario '|' xor_binario { printf("\tor_binario -> or_binario | xor_binario\n"); }
     ;
 
 xor_binario
-    : xor_binario '@' xor_binario { printf("\txor_binario -> xor_binario @ xor_binario\n"); }
-    | and_binario { printf("\txor_binario -> and_binario\n"); }
+    : and_binario { printf("\txor_binario -> and_binario\n"); }
+    | xor_binario '@' and_binario { printf("\txor_binario -> xor_binario @ and_binario\n"); }
     ;
 
 and_binario
-    : and_binario '&' and_binario { printf("\tand_binario -> and_binario & and_binario\n"); }
-    | expr_desplazamiento { printf("\tand_binario -> expr_desplazamiento\n"); }
+    : expr_desplazamiento { printf("\tand_binario -> expr_desplazamiento\n"); }
+    | and_binario '&' expr_desplazamiento { printf("\tand_binario -> and_binario & expr_desplazamientoo\n"); }
     ;
 
 expr_desplazamiento
-    : expr_desplazamiento FLECHA_IZDA expr_desplazamiento { printf("\texpr_desplazamiento -> expr_desplazamiento '<-' expr_desplazamiento\n"); }
-    | expr_desplazamiento FLECHA_DCHA expr_desplazamiento { printf("\texpr_desplazamiento -> expr_desplazamiento '->' expr_desplazamiento\n"); }
-    | expr_aditiva  { printf("\texpr_desplazamiento -> expr_aditiva\n"); }
+    : expr_aditiva  { printf("\texpr_desplazamiento -> expr_aditiva\n"); }
+    | expr_desplazamiento FLECHA_IZDA expr_aditiva { printf("\texpr_desplazamiento -> expr_desplazamiento '<-' expr_aditiva\n"); }
+    | expr_desplazamiento FLECHA_DCHA expr_aditiva { printf("\texpr_desplazamiento -> expr_desplazamiento '->' expr_aditiva\n"); }
     ;
 
 expr_aditiva
-    : expr_aditiva '+' expr_aditiva { printf("\texpr_aditiva -> expr_aditiva + expr_aditiva\n"); }
-    | expr_aditiva '-' expr_aditiva { printf("\texpr_aditiva -> expr_aditiva - expr_aditiva\n"); }
-    | expr_multiplicativa { printf("\texpr_aditiva -> expr_multiplicativa\n"); }
+    : expr_multiplicativa  { printf("\texpr_aditiva -> expr_multiplicativa\n"); }
+    | expr_aditiva '+' expr_multiplicativa { printf("\texpr_aditiva -> expr_aditiva + expr_multiplicativa\n"); }
+    | expr_aditiva '-' expr_multiplicativa { printf("\texpr_aditiva -> expr_aditiva - expr_multiplicativa\n"); }
     ;
 
 expr_multiplicativa
-    : expr_multiplicativa '*' expr_multiplicativa { printf("\texpr_multiplicativa -> expr_multiplicativa * expr_multiplicativa\n"); }
-    | expr_multiplicativa '/' expr_multiplicativa { printf("\texpr_multiplicativa -> expr_multiplicativa / expr_multiplicativa\n"); }
-    | expr_multiplicativa MOD expr_multiplicativa { printf("\texpr_multiplicativa -> expr_multiplicativa mod expr_multiplicativa\n"); }
-    | expr_potencia { printf("\texpr_multiplicativa -> expr_potencia\n"); }
+    : expr_potencia { printf("\texpr_multiplicativa -> expr_potencia\n"); }
+    | expr_multiplicativa '*' expr_potencia { printf("\texpr_multiplicativa -> expr_multiplicativa * expr_potencia\n"); }
+    | expr_multiplicativa '/' expr_potencia { printf("\texpr_multiplicativa -> expr_multiplicativa / expr_potencia\n"); }
+    | expr_multiplicativa MOD expr_potencia { printf("\texpr_multiplicativa -> expr_multiplicativa mod expr_potencia\n"); }
     ;
 
 expr_potencia
-    : expr_potencia POTENCIA expr_potencia  { printf("\texpr_potencia -> expr_potencia ** expr_potencia\n"); }
-    | expr_unaria { printf("\texpr_potencia -> expr_unaria\n"); }
+    : expr_unaria { printf("\texpr_potencia -> expr_unaria\n"); }
+    | expr_potencia POTENCIA expr_unaria  { printf("\texpr_potencia -> expr_potencia ** expr_unaria\n"); }
     ;
 
 expr_unaria
-    : '-' expr_unaria %prec MENOS_UNARIO  { printf("\texpr_unaria -> -expr_unaria\n"); }
-    | '~' expr_unaria %prec COMPLEMENTO { printf("\texpr_unaria -> ~expr_unaria\n"); }
-    | '!' expr_unaria %prec NEQ_LOGICA  { printf("\texpr_unaria -> !expr_unaria\n"); }
-    | TAMANO expr_unaria %prec TAMANOB  { printf("\texpr_unaria -> tamano expr_unaria\n"); }
-    | expr_primaria { printf("\texpr_unaria -> expr_primaria\n"); }
+    : expr_primaria { printf("\texpr_unaria -> expr_primaria\n"); } 
+    | '-' expr_primaria { printf("\texpr_unaria -> -expr_primaria\n"); }
+    | '~' expr_primaria { printf("\texpr_unaria -> ~expr_primaria\n"); }
+    | '!' expr_primaria { printf("\texpr_unaria -> !expr_primaria\n"); }
+    | TAMANO expr_primaria { printf("\texpr_unaria -> tamano expr_primaria\n"); } 
     ;
 
 expr_primaria 
